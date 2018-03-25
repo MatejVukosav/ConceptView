@@ -20,7 +20,6 @@ public class MainActivity extends AppCompatActivity {
 
         ValueAnimator valueAnimator = ValueAnimator.ofFloat( 0, 360 );
         valueAnimator.setDuration( 3000 );
-//        valueAnimator.setRepeatMode( ValueAnimator.RESTART );
         valueAnimator.setRepeatCount( ValueAnimator.INFINITE );
         valueAnimator.setEvaluator( new FloatEvaluator());
         valueAnimator.setInterpolator( new LinearInterpolator(  ) );
@@ -35,23 +34,6 @@ public class MainActivity extends AppCompatActivity {
         } );
 
         valueAnimator.start();
-
-//        RotateAnimation wheelRotation = new RotateAnimation( 0.0f, 360, binding.conceptView.leftWheelCenterX, binding.conceptView.leftWheelCenterY );
-//        wheelRotation.setDuration( 3000 ); // rotate 12 rounds in 3 seconds
-//        wheelRotation.setInterpolator( this, android.R.interpolator.accelerate_decelerate );
-//        binding.conceptView.startAnimation( wheelRotation );
-//
-//        wheelRotation.setAnimationListener( new Animation.AnimationListener() {
-//            public void onAnimationStart( Animation animation ) {
-//            }
-//
-//            public void onAnimationEnd( Animation animation ) {
-//            }
-//
-//            public void onAnimationRepeat( Animation animation ) {
-//
-//            }
-//        } );
-
+        
     }
 }
