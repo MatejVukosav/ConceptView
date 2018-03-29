@@ -1,12 +1,21 @@
 package com.vuki.concept.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ComposeShader;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
+import android.graphics.PorterDuff;
+import android.graphics.RadialGradient;
 import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.SweepGradient;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -18,13 +27,27 @@ public class ConceptView extends View {
 
     float width;
     float height;
-    Paint wheelPaint;
     float wheelRadius;
+    Paint wheelPaint;
     Paint chassisPaint;
+    Paint background;
     Path carPath = new Path();
+    PointF wheelCirclePoint = new PointF();
+
+    float firstWheelCx;
+    float firstWheelCy;
 
     float leftWheelCenterX;
     float leftWheelCenterY;
+
+    float secondWheelCx;
+    float secondWheelCy;
+
+    Shader sweepGradient;
+    Shader linearShader;
+    Shader composeShader;
+    Shader radialShader;
+    Shader bitmapShader;
 
     public float wheelAngleOffset = 0;
 
@@ -51,9 +74,84 @@ public class ConceptView extends View {
             isInitialized = true;
             init();
         }
+        // bez postavljanja tipa 11mb ali ne radi ComposeShader
+        //s postavljanjem 17-18mb
+
+        setBackgroundShader();
+        canvas.drawPaint( background );
+        //setLayerType( LAYER_TYPE_NONE, null );
 
 //        drawUglyCar( canvas );
         drawPrettyCar( canvas );
+        //  chassisPaint.setShader( getShader( getWidth() / 2, getHeight() / 2, wheelRadius ) );
+        //wheelPaint.setShader( getShader( firstWheelCx, firstWheelCy, wheelRadius ) );
+    }
+
+    private void setBackgroundShader() {
+        //setLayerType( LAYER_TYPE_HARDWARE, null );
+    }
+
+    private Shader getLinearShader( float cX, float cY ) {
+        /**
+         * LINEAR GRADIENT
+         */
+        return new LinearGradient( cX / 2, cY / 2, cX / 2 + cX, cY / 2 + cY,
+                new int[]{ Color.BLUE, Color.GREEN, Color.RED },
+                null,
+                Shader.TileMode.REPEAT );
+    }
+
+    private Shader getRadialShader( float cX, float cY, float radius ) {
+        /**
+         * RADIAL
+         */
+//        Shader shader = new RadialGradient( cX, cY, radius,
+//                new int[]{ Color.RED, Color.GREEN, Color.BLUE },
+//                new float[]{ 0.3f, 0.4f, 0.5f },
+//                Shader.TileMode.CLAMP );
+        /*sa softverskim iscrtavanjem <- TREBA PAZIT DA JE HARDWARE
+        ako zelimo s dvije boje samo
+        https://blog.stylingandroid.com/radialgradient-gradients/
+        setLayerType( LAYER_TYPE_SOFTWARE,wheelPaint );
+        */
+        return new RadialGradient( cX, cY, radius,
+                Color.GREEN,
+                Color.TRANSPARENT,
+                Shader.TileMode.CLAMP );
+    }
+
+    private Shader getSweepShader( float cX, float cY ) {
+        /**
+         * SWEEP
+         *
+         * upozorit da pozicije moraju biti jednako rasporedene.
+         * Radi cijeli krug koristeci boje.
+         * Primjer -> farbanje slova, progress barova
+         */
+        return new SweepGradient( cX, cY, new int[]{ Color.RED, Color.GREEN, Color.BLUE }, null );
+    }
+
+    private Shader getBitmapShader( float cX, float cY, float radius ) {
+        /**
+         * BITMAP GRADIENT
+         */
+
+        // Bitmap bitmap = Bitmap.createBitmap( getWidth() / 2, getHeight() / 2, Bitmap.Config.ARGB_8888 );
+        Bitmap bitmap = BitmapFactory.decodeResource( getResources(), android.R.drawable.star_big_on );
+        return new BitmapShader( bitmap,
+                Shader.TileMode.CLAMP, //ponavlja po x
+                Shader.TileMode.REPEAT ); //ponavlja po y
+    }
+
+    private Shader getComposeShader() {
+
+        /**
+         * COMPOSE GRADIENT
+         * ne radi s hardverskom akceleracijom
+         * https://developer.android.com/guide/topics/graphics/hardware-accel.html#unsupported
+         * prekrivene strukture nisu moguce
+         */
+        return new ComposeShader( linearShader, sweepGradient, PorterDuff.Mode.ADD );
     }
 
     boolean isInitialized = false;
@@ -63,11 +161,13 @@ public class ConceptView extends View {
         width = getWidth();
 
         wheelPaint = new Paint();
+        wheelPaint.setAntiAlias( true );
         wheelPaint.setColor( Color.RED );
         wheelPaint.setStyle( Paint.Style.STROKE );
         wheelPaint.setStrokeWidth( 10 );
 
         chassisPaint = new Paint();
+        chassisPaint.setAntiAlias( true );
         chassisPaint.setColor( Color.BLACK );
 
         wheelRadius = getContext().getResources().getInteger( R.integer.wheelRadius );
@@ -125,6 +225,19 @@ public class ConceptView extends View {
         carPath.lineTo( x8, y8 );
 
         carPath.close();
+
+        background = new Paint();
+        background.setAntiAlias( true );
+        background.setColor( Color.YELLOW );
+
+        linearShader = getLinearShader( getWidth() / 2, getHeight() / 2 );
+        sweepGradient = getSweepShader( getWidth() / 2, getHeight() / 2 );
+        radialShader = getRadialShader( getWidth() / 2, getHeight() / 2, wheelRadius );
+        bitmapShader = getBitmapShader( getWidth() / 2, getHeight() / 2, wheelRadius );
+        composeShader = getComposeShader();
+
+        background.setShader( sweepGradient );
+
     }
 
     private void drawUglyCar( Canvas canvas ) {
@@ -150,42 +263,41 @@ public class ConceptView extends View {
 
         float initAngle = 72;
 
-        PointF endPoint = getPoint( initAngle + wheelAngleOffset, wheelRadius, cX, cY );
-        canvas.drawLine( cX, cY, endPoint.x, endPoint.y, wheelPaint );
+        calculatePoint( wheelCirclePoint, initAngle + wheelAngleOffset, radius, cX, cY );
+        canvas.drawLine( cX, cY, wheelCirclePoint.x, wheelCirclePoint.y, wheelPaint );
 
-        endPoint = getPoint( 2 * initAngle + wheelAngleOffset, wheelRadius, cX, cY );
-        canvas.drawLine( cX, cY, endPoint.x, endPoint.y, wheelPaint );
+        calculatePoint( wheelCirclePoint, 2 * initAngle + wheelAngleOffset, radius, cX, cY );
+        canvas.drawLine( cX, cY, wheelCirclePoint.x, wheelCirclePoint.y, wheelPaint );
 
-        endPoint = getPoint( 3 * initAngle + wheelAngleOffset, wheelRadius, cX, cY );
-        canvas.drawLine( cX, cY, endPoint.x, endPoint.y, wheelPaint );
+        calculatePoint( wheelCirclePoint, 3 * initAngle + wheelAngleOffset, radius, cX, cY );
+        canvas.drawLine( cX, cY, wheelCirclePoint.x, wheelCirclePoint.y, wheelPaint );
 
-        endPoint = getPoint( 4 * initAngle + wheelAngleOffset, wheelRadius, cX, cY );
-        canvas.drawLine( cX, cY, endPoint.x, endPoint.y, wheelPaint );
+        calculatePoint( wheelCirclePoint, 4 * initAngle + wheelAngleOffset, radius, cX, cY );
+        canvas.drawLine( cX, cY, wheelCirclePoint.x, wheelCirclePoint.y, wheelPaint );
 
-        endPoint = getPoint( 5 * initAngle + wheelAngleOffset, wheelRadius, cX, cY );
-        canvas.drawLine( cX, cY, endPoint.x, endPoint.y, wheelPaint );
+        calculatePoint( wheelCirclePoint, 5 * initAngle + wheelAngleOffset, radius, cX, cY );
+        canvas.drawLine( cX, cY, wheelCirclePoint.x, wheelCirclePoint.y, wheelPaint );
     }
 
-    private PointF getPoint( float angle, float radius, float cX, float cY ) {
+    private void calculatePoint( PointF point, float angle, float radius, float cX, float cY ) {
         float x = (float) ( Math.cos( Math.toRadians( angle ) ) * radius ) + cX;
         float y = (float) ( Math.sin( Math.toRadians( angle ) ) * radius ) + cY;
-        return new PointF( x, y );
+        point.set( x, y );
     }
 
     private void drawPrettyCar( Canvas canvas ) {
-        float firstWheelCx = width / 4;
-        float firstWheelCy = 3 * height / 4;
+        firstWheelCx = width / 4;
+        firstWheelCy = 3 * height / 4;
         draWheel( canvas, firstWheelCx, firstWheelCy, wheelRadius, wheelPaint );
 
-        float secondWheelCx = 3 * width / 4;
-        float secondWheelCy = 3 * height / 4;
+        secondWheelCx = 3 * width / 4;
+        secondWheelCy = 3 * height / 4;
         draWheel( canvas, secondWheelCx, secondWheelCy, wheelRadius, wheelPaint );
 
         drawChassis( canvas );
     }
 
     private void drawChassis( Canvas canvas ) {
-
         canvas.drawPath( carPath, chassisPaint );
     }
 }

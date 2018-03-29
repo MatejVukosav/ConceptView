@@ -34,6 +34,6 @@ public class MainActivity extends AppCompatActivity {
         } );
 
         valueAnimator.start();
-        
+
     }
 }
