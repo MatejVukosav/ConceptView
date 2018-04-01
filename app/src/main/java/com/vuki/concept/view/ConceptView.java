@@ -40,6 +40,8 @@ public class ConceptView extends View {
     float secondWheelCx;
     float secondWheelCy;
 
+    RectF exhaustBoundaries;
+
     Shader sweepGradient;
     Shader linearShader;
     Shader composeShader;
@@ -82,8 +84,12 @@ public class ConceptView extends View {
         //  chassisPaint.setShader( getShader( getWidth() / 2, getHeight() / 2, wheelRadius ) );
         //wheelPaint.setShader( getShader( firstWheelCx, firstWheelCy, wheelRadius ) );
 
+        drawExhaust( canvas );
     }
 
+    private void drawExhaust( Canvas canvas ) {
+        canvas.drawRect( exhaustBoundaries, chassisPaint );
+    }
 
     private void init() {
         height = getHeight();
@@ -151,8 +157,11 @@ public class ConceptView extends View {
         float x8 = 0.9f * width / 8;
         float y8 = height / 2;
         carPath.lineTo( x8, y8 );
-
         carPath.close();
+
+        float endExhaustX = 0.125f * width;
+        float endExhaustY = 0.73f * height;
+        exhaustBoundaries = new RectF( 0.110f * width, 0.69f * height, endExhaustX, endExhaustY );
 
         // Bitmap bitmap = Bitmap.createBitmap( getWidth() / 2, getHeight() / 2, Bitmap.Config.ARGB_8888 );
         Bitmap bitmap = BitmapFactory.decodeResource( getResources(), android.R.drawable.star_big_on );
