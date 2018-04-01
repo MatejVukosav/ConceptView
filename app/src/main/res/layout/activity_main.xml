@@ -8,10 +8,23 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
+
+        <com.vuki.concept.CountrysideView
+            android:id="@+id/countryside_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
         <com.vuki.concept.view.ConceptView
             android:id="@+id/concept_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+
+            />
+        <!--<ImageView-->
+        <!--android:id="@+id/image"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:src="@drawable/humans_series_intertitle"/>-->
 
     </android.support.constraint.ConstraintLayout>
 </layout>

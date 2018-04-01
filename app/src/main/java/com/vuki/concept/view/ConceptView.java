@@ -3,22 +3,18 @@ package com.vuki.concept.view;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ComposeShader;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
-import android.graphics.PorterDuff;
-import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
-import android.graphics.SweepGradient;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
+
+import com.vuki.concept.ShaderHelper;
 
 /**
  * Created by mvukosav
@@ -30,9 +26,10 @@ public class ConceptView extends View {
     float wheelRadius;
     Paint wheelPaint;
     Paint chassisPaint;
-    Paint background;
+
     Path carPath = new Path();
     PointF wheelCirclePoint = new PointF();
+    boolean isInitialized = false;
 
     float firstWheelCx;
     float firstWheelCy;
@@ -77,84 +74,16 @@ public class ConceptView extends View {
         // bez postavljanja tipa 11mb ali ne radi ComposeShader
         //s postavljanjem 17-18mb
 
-        setBackgroundShader();
-        canvas.drawPaint( background );
+//        canvas.drawPaint( background );
         //setLayerType( LAYER_TYPE_NONE, null );
-
+//        background.setColorFilter( ColorFilterHelper.getColorMatrixColorFilter() );
 //        drawUglyCar( canvas );
         drawPrettyCar( canvas );
         //  chassisPaint.setShader( getShader( getWidth() / 2, getHeight() / 2, wheelRadius ) );
         //wheelPaint.setShader( getShader( firstWheelCx, firstWheelCy, wheelRadius ) );
+
     }
 
-    private void setBackgroundShader() {
-        //setLayerType( LAYER_TYPE_HARDWARE, null );
-    }
-
-    private Shader getLinearShader( float cX, float cY ) {
-        /**
-         * LINEAR GRADIENT
-         */
-        return new LinearGradient( cX / 2, cY / 2, cX / 2 + cX, cY / 2 + cY,
-                new int[]{ Color.BLUE, Color.GREEN, Color.RED },
-                null,
-                Shader.TileMode.REPEAT );
-    }
-
-    private Shader getRadialShader( float cX, float cY, float radius ) {
-        /**
-         * RADIAL
-         */
-//        Shader shader = new RadialGradient( cX, cY, radius,
-//                new int[]{ Color.RED, Color.GREEN, Color.BLUE },
-//                new float[]{ 0.3f, 0.4f, 0.5f },
-//                Shader.TileMode.CLAMP );
-        /*sa softverskim iscrtavanjem <- TREBA PAZIT DA JE HARDWARE
-        ako zelimo s dvije boje samo
-        https://blog.stylingandroid.com/radialgradient-gradients/
-        setLayerType( LAYER_TYPE_SOFTWARE,wheelPaint );
-        */
-        return new RadialGradient( cX, cY, radius,
-                Color.GREEN,
-                Color.TRANSPARENT,
-                Shader.TileMode.CLAMP );
-    }
-
-    private Shader getSweepShader( float cX, float cY ) {
-        /**
-         * SWEEP
-         *
-         * upozorit da pozicije moraju biti jednako rasporedene.
-         * Radi cijeli krug koristeci boje.
-         * Primjer -> farbanje slova, progress barova
-         */
-        return new SweepGradient( cX, cY, new int[]{ Color.RED, Color.GREEN, Color.BLUE }, null );
-    }
-
-    private Shader getBitmapShader( float cX, float cY, float radius ) {
-        /**
-         * BITMAP GRADIENT
-         */
-
-        // Bitmap bitmap = Bitmap.createBitmap( getWidth() / 2, getHeight() / 2, Bitmap.Config.ARGB_8888 );
-        Bitmap bitmap = BitmapFactory.decodeResource( getResources(), android.R.drawable.star_big_on );
-        return new BitmapShader( bitmap,
-                Shader.TileMode.CLAMP, //ponavlja po x
-                Shader.TileMode.REPEAT ); //ponavlja po y
-    }
-
-    private Shader getComposeShader() {
-
-        /**
-         * COMPOSE GRADIENT
-         * ne radi s hardverskom akceleracijom
-         * https://developer.android.com/guide/topics/graphics/hardware-accel.html#unsupported
-         * prekrivene strukture nisu moguce
-         */
-        return new ComposeShader( linearShader, sweepGradient, PorterDuff.Mode.ADD );
-    }
-
-    boolean isInitialized = false;
 
     private void init() {
         height = getHeight();
@@ -162,9 +91,9 @@ public class ConceptView extends View {
 
         wheelPaint = new Paint();
         wheelPaint.setAntiAlias( true );
-        wheelPaint.setColor( Color.RED );
+        wheelPaint.setColor( Color.WHITE );
         wheelPaint.setStyle( Paint.Style.STROKE );
-        wheelPaint.setStrokeWidth( 10 );
+        wheelPaint.setStrokeWidth( getResources().getDimensionPixelSize( R.dimen.wheel_paint_stroke_width ) );
 
         chassisPaint = new Paint();
         chassisPaint.setAntiAlias( true );
@@ -174,11 +103,11 @@ public class ConceptView extends View {
 
         float wheelSpacing = 20;
         float chassisWheelRadius = wheelRadius + wheelSpacing;
+
         //dole lijevo
         float x1 = width / 8;
         float y1 = 3 * height / 4;
         carPath.moveTo( x1, y1 );
-
         float x11 = width / 4 - wheelRadius;
         float y11 = 3 * height / 4;
         carPath.lineTo( x11, y11 );
@@ -195,48 +124,44 @@ public class ConceptView extends View {
         carPath.lineTo( x2, y2 );
 
         //naprijed gore
-        float x3 = 7 * width / 8;
-        float y3 = 4.5f * height / 8;
+        float x3 = 7.1f * width / 8;
+        float y3 = 2.5f * height / 4;
         carPath.lineTo( x3, y3 );
 
         //hauba desno
-        float x4 = 3 * width / 4;
-        float y4 = 4 * height / 8;
-        carPath.lineTo( x4, y4 );
-
+        float x4 = 6.5f * width / 8;
+        float y4 = 2.2f * height / 4;
         //hauba lijevo
-        float x5 = 5 * width / 8;
-        float y5 = height / 2;
-        carPath.lineTo( x5, y5 );
+        float x5 = 5.2f * width / 8;
+        float y5 = 2.1f * height / 4;
+        carPath.quadTo( x4, y4, x5, y5 );
 
-        //krov desno
-        float x6 = width / 2;
-        float y6 = 3 * height / 8;
-        carPath.lineTo( x6, y6 );
-
-        //krov lijevo
-        float x7 = 3 * width / 8;
-        float y7 = 3 * height / 8;
-        carPath.lineTo( x7, y7 );
+        //Roof right
+        float roofXRight = width / 2;
+        float roofYRight = 1.7f * height / 4;
+        //Roof middle
+        float roofXMiddle = 3.9f * width / 8;
+        float roofYMiddle = 1.7f * height / 4;
+        //Roof left
+        float roofXLeft = 3 * width / 8;
+        float roofYLeft = 1.7f * height / 4;
+        carPath.cubicTo( roofXRight, roofYRight, roofXMiddle, roofYMiddle, roofXLeft, roofYLeft );
 
         //lijevo kraj
-        float x8 = width / 8;
+        float x8 = 0.9f * width / 8;
         float y8 = height / 2;
         carPath.lineTo( x8, y8 );
 
         carPath.close();
 
-        background = new Paint();
-        background.setAntiAlias( true );
-        background.setColor( Color.YELLOW );
+        // Bitmap bitmap = Bitmap.createBitmap( getWidth() / 2, getHeight() / 2, Bitmap.Config.ARGB_8888 );
+        Bitmap bitmap = BitmapFactory.decodeResource( getResources(), android.R.drawable.star_big_on );
 
-        linearShader = getLinearShader( getWidth() / 2, getHeight() / 2 );
-        sweepGradient = getSweepShader( getWidth() / 2, getHeight() / 2 );
-        radialShader = getRadialShader( getWidth() / 2, getHeight() / 2, wheelRadius );
-        bitmapShader = getBitmapShader( getWidth() / 2, getHeight() / 2, wheelRadius );
-        composeShader = getComposeShader();
-
-        background.setShader( sweepGradient );
+        linearShader = ShaderHelper.getLinearShader( getWidth() / 2, getHeight() / 2 );
+        sweepGradient = ShaderHelper.getSweepShader( getWidth() / 2, getHeight() / 2 );
+        radialShader = ShaderHelper.getRadialShader( getWidth() / 2, getHeight() / 2, wheelRadius );
+        bitmapShader = ShaderHelper.getBitmapShader( bitmap, getWidth() / 2, getHeight() / 2, wheelRadius );
+        composeShader = ShaderHelper.getComposeShader( linearShader, sweepGradient );
 
     }
 
