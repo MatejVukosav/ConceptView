@@ -16,62 +16,61 @@ import android.graphics.SweepGradient;
 public class ShaderHelper {
 
     public static Shader getLinearShader( float cX, float cY ) {
-        /**
-         * LINEAR GRADIENT
+        /*
+        LINEAR GRADIENT
          */
         return new LinearGradient( cX / 2, cY / 2, cX / 2 + cX, cY / 2 + cY,
-                new int[]{ Color.BLUE, Color.GREEN, Color.RED },
+                new int[]{ Color.RED,  Color.GREEN, Color.BLUE },
                 null,
-                Shader.TileMode.REPEAT );
+                Shader.TileMode.CLAMP );
     }
 
     public static Shader getRadialShader( float cX, float cY, float radius ) {
-        /**
-         * RADIAL
+        /*
+          RADIAL
          */
-//        Shader shader = new RadialGradient( cX, cY, radius,
-//                new int[]{ Color.RED, Color.GREEN, Color.BLUE },
-//                new float[]{ 0.3f, 0.4f, 0.5f },
-//                Shader.TileMode.CLAMP );
-        /*sa softverskim iscrtavanjem <- TREBA PAZIT DA JE HARDWARE
-        ako zelimo s dvije boje samo
-        https://blog.stylingandroid.com/radialgradient-gradients/
-        setLayerType( LAYER_TYPE_SOFTWARE,wheelPaint );
-        */
         return new RadialGradient( cX, cY, radius,
-                Color.GREEN,
-                Color.TRANSPARENT,
+                new int[]{ Color.RED, Color.GREEN, Color.BLUE,Color.YELLOW },
+                null,
                 Shader.TileMode.CLAMP );
+        //two colors
+        /*not with software layer type <- it should be hardware if we want only two colors (and one is transparent)
+        https://blog.stylingandroid.com/radialgradient-gradients/
+        setLayerType( LAYER_TYPE_HARDWARE,null );
+        */
+//        return new RadialGradient( cX, cY, radius,
+//                Color.GREEN,
+//                Color.TRANSPARENT,
+//                Shader.TileMode.CLAMP );
     }
 
     public static Shader getSweepShader( float cX, float cY ) {
         /**
          * SWEEP
          *
-         * upozorit da pozicije moraju biti jednako rasporedene.
-         * Radi cijeli krug koristeci boje.
-         * Primjer -> farbanje slova, progress barova
+         * Position must be equally divided
+         * Creating whole circle using colors
+         * Example -> coloring letters, progress bars
          */
-        return new SweepGradient( cX, cY, new int[]{ Color.RED, Color.GREEN, Color.BLUE }, null );
+        return new SweepGradient( cX, cY, new int[]{ Color.RED, Color.GREEN,Color.BLUE ,Color.YELLOW, }, null );
     }
 
-    public static Shader getBitmapShader( Bitmap bitmap, float cX, float cY, float radius ) {
+    public static Shader getBitmapShader( Bitmap bitmap ) {
         /**
          * BITMAP GRADIENT
          */
-
          return new BitmapShader( bitmap,
-                Shader.TileMode.CLAMP, //ponavlja po x
-                Shader.TileMode.REPEAT ); //ponavlja po y
+                Shader.TileMode.REPEAT, //repeat by x
+                Shader.TileMode.REPEAT ); //repeat by y
     }
 
     public static Shader getComposeShader( Shader first, Shader second ) {
 
         /**
          * COMPOSE GRADIENT
-         * ne radi s hardverskom akceleracijom
+         * doesn't work with hardware acceleration
          * https://developer.android.com/guide/topics/graphics/hardware-accel.html#unsupported
-         * prekrivene strukture nisu moguce
+         * Covered structures are not available
          */
         return new ComposeShader( first, second, PorterDuff.Mode.ADD );
     }

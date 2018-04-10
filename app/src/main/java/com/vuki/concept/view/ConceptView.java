@@ -16,37 +16,35 @@ import android.view.View;
 
 import com.vuki.concept.ShaderHelper;
 
-/**
- * Created by mvukosav
- */
+@SuppressWarnings("FieldCanBeLocal")
 public class ConceptView extends View {
 
     float width;
     float height;
     float wheelRadius;
-    Paint wheelPaint;
-    Paint chassisPaint;
+    private Paint wheelPaint;
+    private Paint chassisPaint;
+    private Paint background;
 
-    Path carPath = new Path();
-    PointF wheelCirclePoint = new PointF();
-    boolean isInitialized = false;
+    private Path carPath = new Path();
+    private PointF wheelCirclePoint = new PointF();
+    private boolean isInitialized = false;
+    private float firstWheelCx;
+    private float firstWheelCy;
 
-    float firstWheelCx;
-    float firstWheelCy;
+    private float leftWheelCenterX;
+    private float leftWheelCenterY;
 
-    float leftWheelCenterX;
-    float leftWheelCenterY;
+    private float secondWheelCx;
+    private float secondWheelCy;
 
-    float secondWheelCx;
-    float secondWheelCy;
+    private RectF exhaustBoundaries;
 
-    RectF exhaustBoundaries;
-
-    Shader sweepGradient;
-    Shader linearShader;
-    Shader composeShader;
-    Shader radialShader;
-    Shader bitmapShader;
+    private Shader sweepGradient;
+    private Shader linearShader;
+    private Shader composeShader;
+    private Shader radialShader;
+    private Shader bitmapShader;
 
     public float wheelAngleOffset = 0;
 
@@ -58,14 +56,6 @@ public class ConceptView extends View {
         super( context, attrs );
     }
 
-    public ConceptView( Context context, @Nullable AttributeSet attrs, int defStyleAttr ) {
-        super( context, attrs, defStyleAttr );
-    }
-
-    public ConceptView( Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes ) {
-        super( context, attrs, defStyleAttr, defStyleRes );
-    }
-
     @Override
     protected void onDraw( Canvas canvas ) {
         super.onDraw( canvas );
@@ -73,18 +63,14 @@ public class ConceptView extends View {
             isInitialized = true;
             init();
         }
-        // bez postavljanja tipa 11mb ali ne radi ComposeShader
-        //s postavljanjem 17-18mb
 
+        //drawUglyCar( canvas );
 //        canvas.drawPaint( background );
-        //setLayerType( LAYER_TYPE_NONE, null );
-//        background.setColorFilter( ColorFilterHelper.getColorMatrixColorFilter() );
-//        drawUglyCar( canvas );
         drawPrettyCar( canvas );
-        //  chassisPaint.setShader( getShader( getWidth() / 2, getHeight() / 2, wheelRadius ) );
+        //chassisPaint.setShader( getShader( getWidth() / 2, getHeight() / 2, wheelRadius ) );
         //wheelPaint.setShader( getShader( firstWheelCx, firstWheelCy, wheelRadius ) );
 
-        drawExhaust( canvas );
+        // drawExhaust( canvas );
     }
 
     private void drawExhaust( Canvas canvas ) {
@@ -110,7 +96,7 @@ public class ConceptView extends View {
         float wheelSpacing = 20;
         float chassisWheelRadius = wheelRadius + wheelSpacing;
 
-        //dole lijevo
+        //down left
         float x1 = width / 8;
         float y1 = 3 * height / 4;
         carPath.moveTo( x1, y1 );
@@ -124,20 +110,20 @@ public class ConceptView extends View {
         carPath.arcTo( 3 * width / 4 - chassisWheelRadius, 3 * height / 4 - chassisWheelRadius, 3 * width / 4 + chassisWheelRadius, 3 * height / 4 + chassisWheelRadius,
                 180f, 180f, false );
 
-        //naprijed dole
+        //front down
         float x2 = 7 * width / 8;
         float y2 = 3 * height / 4;
         carPath.lineTo( x2, y2 );
 
-        //naprijed gore
+        //front up
         float x3 = 7.1f * width / 8;
         float y3 = 2.5f * height / 4;
         carPath.lineTo( x3, y3 );
 
-        //hauba desno
+        //hood right
         float x4 = 6.5f * width / 8;
         float y4 = 2.2f * height / 4;
-        //hauba lijevo
+        //hood left
         float x5 = 5.2f * width / 8;
         float y5 = 2.1f * height / 4;
         carPath.quadTo( x4, y4, x5, y5 );
@@ -153,7 +139,7 @@ public class ConceptView extends View {
         float roofYLeft = 1.7f * height / 4;
         carPath.cubicTo( roofXRight, roofYRight, roofXMiddle, roofYMiddle, roofXLeft, roofYLeft );
 
-        //lijevo kraj
+        //left end
         float x8 = 0.9f * width / 8;
         float y8 = height / 2;
         carPath.lineTo( x8, y8 );
@@ -161,20 +147,32 @@ public class ConceptView extends View {
 
         float endExhaustX = 0.125f * width;
         float endExhaustY = 0.73f * height;
-        exhaustBoundaries = new RectF( 0.110f * width, 0.69f * height, endExhaustX, endExhaustY );
+        exhaustBoundaries = new RectF( 0.100f * width, 0.69f * height, endExhaustX, endExhaustY );
 
-        // Bitmap bitmap = Bitmap.createBitmap( getWidth() / 2, getHeight() / 2, Bitmap.Config.ARGB_8888 );
         Bitmap bitmap = BitmapFactory.decodeResource( getResources(), android.R.drawable.star_big_on );
 
         linearShader = ShaderHelper.getLinearShader( getWidth() / 2, getHeight() / 2 );
         sweepGradient = ShaderHelper.getSweepShader( getWidth() / 2, getHeight() / 2 );
         radialShader = ShaderHelper.getRadialShader( getWidth() / 2, getHeight() / 2, wheelRadius );
-        bitmapShader = ShaderHelper.getBitmapShader( bitmap, getWidth() / 2, getHeight() / 2, wheelRadius );
-        composeShader = ShaderHelper.getComposeShader( linearShader, sweepGradient );
+        bitmapShader = ShaderHelper.getBitmapShader( bitmap );
+        composeShader = ShaderHelper.getComposeShader( linearShader, bitmapShader );
 
+        background = new Paint();
+        background.setAntiAlias( true );
+        background.setShader( ShaderHelper.getLinearShader( getWidth() / 2, 0.75f * getHeight() ) );
+        //background.setShader( ShaderHelper.getRadialShader( getWidth() / 2, 0.6f * getHeight(), 0.5f*getWidth() ) );
     }
 
     private void drawUglyCar( Canvas canvas ) {
+
+        wheelPaint.setColor( Color.RED );
+        chassisPaint.setColor( Color.BLUE );
+
+        RectF lowerChassisRect = new RectF( width / 8, height / 2, 7 * width / 8, 3 * height / 4 );
+        canvas.drawRect( lowerChassisRect, chassisPaint );
+
+        RectF upperChassisRect = new RectF( width / 4, height / 4, 5 * width / 8, height / 2 );
+        canvas.drawRect( upperChassisRect, chassisPaint );
 
         leftWheelCenterX = width / 4;
         leftWheelCenterY = 3 * height / 4;
@@ -185,14 +183,9 @@ public class ConceptView extends View {
         float secondWheelCy = 3 * height / 4;
         canvas.drawCircle( secondWheelCx, secondWheelCy, wheelRadius, wheelPaint );
 
-        RectF lowerChassisRect = new RectF( width / 8, height / 2, 7 * width / 8, 3 * height / 4 );
-        canvas.drawRect( lowerChassisRect, wheelPaint );
-
-        RectF upperChassisRect = new RectF( width / 4, height / 4, 5 * width / 8, height / 2 );
-        canvas.drawRect( upperChassisRect, wheelPaint );
     }
 
-    private void draWheel( Canvas canvas, float cX, float cY, float radius, Paint paint ) {
+    private void drawWheel( Canvas canvas, float cX, float cY, float radius, Paint paint ) {
         canvas.drawCircle( cX, cY, radius, paint );
 
         float initAngle = 72;
@@ -220,18 +213,25 @@ public class ConceptView extends View {
     }
 
     private void drawPrettyCar( Canvas canvas ) {
+
         firstWheelCx = width / 4;
         firstWheelCy = 3 * height / 4;
-        draWheel( canvas, firstWheelCx, firstWheelCy, wheelRadius, wheelPaint );
+        drawWheel( canvas, firstWheelCx, firstWheelCy, wheelRadius, wheelPaint );
 
         secondWheelCx = 3 * width / 4;
         secondWheelCy = 3 * height / 4;
-        draWheel( canvas, secondWheelCx, secondWheelCy, wheelRadius, wheelPaint );
+        drawWheel( canvas, secondWheelCx, secondWheelCy, wheelRadius, wheelPaint );
 
         drawChassis( canvas );
     }
 
     private void drawChassis( Canvas canvas ) {
+//        chassisPaint.setShader( ShaderHelper.getRadialShader( getWidth() / 2, 0.6f * getHeight(), 0.4f*getWidth() ) );
+//        chassisPaint.setShader( ShaderHelper.getSweepShader( 0.4f*getWidth() , 0.6f * getHeight() ) );
+//        chassisPaint.setShader( ShaderHelper.getLinearShader( getWidth() / 2, 0.75f * getHeight() )  );
+//        chassisPaint.setColorFilter( ColorFilterHelper.getColorMatrixColorFilter() );
+
+        chassisPaint.setShader( composeShader );
         canvas.drawPath( carPath, chassisPaint );
     }
 }

@@ -1,4 +1,4 @@
-package com.vuki.concept;
+package com.vuki.concept.view;
 
 import android.content.Context;
 import android.graphics.Canvas;

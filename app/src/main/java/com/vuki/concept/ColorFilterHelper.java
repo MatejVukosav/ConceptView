@@ -1,9 +1,12 @@
 package com.vuki.concept;
 
+import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.LightingColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.support.annotation.ColorInt;
 
 /**
@@ -11,16 +14,28 @@ import android.support.annotation.ColorInt;
  */
 public class ColorFilterHelper {
 
+//    private static float[] matrix = {
+//            1, 1 ,0, 0, -255, //red
+//            0, 0, 0, 0, 0, //green
+//            0, 0, 1, 0, 0, //blue
+//            0, 0, 0, 1, 0 //alpha
+//    };
+
     private static float[] matrix = {
-            1, 1 ,0, 0, -255, //red
-            0, 0, 0, 0, 0, //green
-            0, 0, 1, 0, 0, //blue
-            0, 0, 0, 1, 0 //alpha
+            -1, 0, 0, 0, 255,
+            0, -1, 0, 0, 255,
+            0, 0, -1, 0, 255,
+            0, 0, 0, 1, 0
     };
 
     public static ColorFilter getColorMatrixColorFilter() {
         ColorMatrix colorMatrix = new ColorMatrix();
-        colorMatrix.set( matrix );
+//        colorMatrix.set( matrix );
+        colorMatrix.setSaturation( 0 ); //grayscale
+
+        ColorMatrix colorScale=new ColorMatrix(  );
+        colorScale.setScale( 1, 1, 0.8f, 1 );
+        colorMatrix.postConcat(colorScale );
 
         return new ColorMatrixColorFilter( colorMatrix );
     }
@@ -33,11 +48,11 @@ public class ColorFilterHelper {
 //            1, 1, 1, 1, 1 //alpha
 //    };
 
-    private ColorFilter getPorterDuffColorFilter() {
-        return null;
+    public static ColorFilter getPorterDuffColorFilter() {
+        return new PorterDuffColorFilter( Color.RED, PorterDuff.Mode.XOR );
     }
 
-    private ColorFilter getLightningColorFilter() {
+    public static ColorFilter getLightningColorFilter() {
         /**
          * Integer values are colors
          * 4 bytes are used, one for alpha, one for red, one for green, one for blue
@@ -47,12 +62,12 @@ public class ColorFilterHelper {
          * alpha, red,green,blue
          */
 //        @ColorInt int mul = 0xFFFF00FF; //set green to zero
-//        //int mul = 0x0000FF; //show only blue
-//        @ColorInt int add = 0x00000000;
+        int mul = 0xFF00FF; //show only blue
+        @ColorInt int add = 0x00000000;
 
         //to lighten
-        @ColorInt int mul = 0xFFFFFF;
-        @ColorInt int add = 0x222222;
+//        @ColorInt int mul = 0xFFFFFF;
+//        @ColorInt int add = 0x222222;
 
 //        @ColorInt int add = 0x333333; //20% transparent
 //        @ColorInt int add = 0x808080; //50%
